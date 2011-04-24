@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LoginDialog</class>
+ <widget class="QDialog" name="LoginDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>357</width>
+    <height>275</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Login</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QFormLayout" name="formLayout">
+     <property name="fieldGrowthPolicy">
+      <enum>QFormLayout::ExpandingFieldsGrow</enum>
+     </property>
+     <item row="0" column="0">
+      <widget class="QLabel" name="pathLabel">
+       <property name="text">
+        <string>pat&amp;h</string>
+       </property>
+       <property name="buddy">
+        <cstring>pathEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="dpriLabel">
+       <property name="text">
+        <string>&amp;disk private</string>
+       </property>
+       <property name="buddy">
+        <cstring>dpriEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="dpriEdit"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="dpubLabel">
+       <property name="text">
+        <string>d&amp;isk public</string>
+       </property>
+       <property name="buddy">
+        <cstring>dpubEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="dpubEdit"/>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="passwordLabel">
+       <property name="text">
+        <string>&amp;password</string>
+       </property>
+       <property name="buddy">
+        <cstring>passwordEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLineEdit" name="passwordEdit"/>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="spriLabel">
+       <property name="text">
+        <string>&amp;session private</string>
+       </property>
+       <property name="buddy">
+        <cstring>spriEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QLineEdit" name="spriEdit"/>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="spubLabel">
+       <property name="text">
+        <string>s&amp;ession public</string>
+       </property>
+       <property name="buddy">
+        <cstring>spubEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QLineEdit" name="spubEdit"/>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="truncateLabel">
+       <property name="text">
+        <string>&amp;truncate</string>
+       </property>
+       <property name="buddy">
+        <cstring>truncateEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QLineEdit" name="truncateEdit"/>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="mergeLabel">
+       <property name="text">
+        <string>&amp;merge</string>
+       </property>
+       <property name="buddy">
+        <cstring>mergeEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QLineEdit" name="mergeEdit"/>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="pathEdit"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>LoginDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>LoginDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

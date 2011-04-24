@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title> ysid Yun's security information dictionary</title>
+
+<!-- CSS -->
+<link rel="stylesheet" type="text/css" href="/yui/cssfonts/fonts-min.css">
+<link rel="stylesheet" type="text/css" href="/yui/cssfonts/fonts-context-min.css">
+<link rel="stylesheet" type="text/css" href="/yui/cssreset/reset-min.css">
+<link rel="stylesheet" type="text/css" href="/yui/cssgrids/grids-min.css">
+<link rel="stylesheet" type="text/css" href="/yui/cssreset/reset-context-min.css">
+<link rel="stylesheet" type="text/css" href="/yui/cssbase/base-min.css">
+<link rel="stylesheet" type="text/css" href="/yui/cssbase/base-context-min.css">
+<link rel="stylesheet" type="text/css" href="/yui/widget/assets/skins/sam/widget.css">
+<link rel="stylesheet" type="text/css" href="/yui/widget/assets/skins/sam/widget-stack.css">
+<link rel="stylesheet" type="text/css" href="/yui/overlay/assets/skins/sam/overlay.css">
+<!-- JS -->
+<script type="text/javascript" src="/yui/yui/yui-min.js"></script>
+<script type="text/javascript" src="/yui/json/json-min.js"></script>
+<script type="text/javascript" src="/yui/oop/oop-min.js"></script>
+<script type="text/javascript" src="/yui/event-custom/event-custom-min.js"></script>
+<script type="text/javascript" src="/yui/dom/dom-min.js"></script>
+<script type="text/javascript" src="/yui/dom/dom-style-ie-min.js"></script>
+<script type="text/javascript" src="/yui/event/event-min.js"></script>
+<script type="text/javascript" src="/yui/event/event-focus-min.js"></script>
+<script type="text/javascript" src="/yui/pluginhost/pluginhost-min.js"></script>
+<script type="text/javascript" src="/yui/node/node-min.js"></script>
+<script type="text/javascript" src="/yui/event/event-base-ie-min.js"></script>
+<script type="text/javascript" src="/yui/attribute/attribute-min.js"></script>
+<script type="text/javascript" src="/yui/base/base-min.js"></script>
+<script type="text/javascript" src="/yui/anim/anim-min.js"></script>
+<script type="text/javascript" src="/yui/dump/dump-min.js"></script>
+<script type="text/javascript" src="/yui/querystring/querystring-stringify-simple-min.js"></script>
+<script type="text/javascript" src="/yui/queue-promote/queue-promote-min.js"></script>
+<script type="text/javascript" src="/yui/datatype/datatype-xml-min.js"></script>
+<script type="text/javascript" src="/yui/io/io-min.js"></script>
+<script type="text/javascript" src="/yui/event-simulate/event-simulate-min.js"></script>
+<script type="text/javascript" src="/yui/node/node-event-simulate-min.js"></script>
+<script type="text/javascript" src="/yui/classnamemanager/classnamemanager-min.js"></script>
+<script type="text/javascript" src="/yui/widget/widget-min.js"></script>
+<script type="text/javascript" src="/yui/widget/widget-base-ie-min.js"></script>
+<script type="text/javascript" src="/yui/widget/widget-stdmod-min.js"></script>
+<script type="text/javascript" src="/yui/widget/widget-position-min.js"></script>
+<script type="text/javascript" src="/yui/widget/widget-position-align-min.js"></script>
+<script type="text/javascript" src="/yui/widget/widget-stack-min.js"></script>
+<script type="text/javascript" src="/yui/widget/widget-position-constrain-min.js"></script>
+<script type="text/javascript" src="/yui/overlay/overlay-min.js"></script>
+
+<script type="text/javascript" src="/js/storage-lite.js"></script>
+<script type="text/javascript" src="/js/ZeroClipboard.js"></script>
+<script type="text/javascript" src="/js/ysid.js"></script>
+
+<style type="text/css">
+.hidden {
+display:none;
+}
+
+.dialog {
+border-width:1px 1px 10px 1px;
+border-style:solid;
+border-color:gray;
+background-color:white;
+padding:10px;
+}
+
+#item-menu {
+background-color:white;
+}
+
+.menu {
+border-color:gray;
+border-style:solid;
+border-width:1px;
+margin: 2px;
+padding: 2px;
+}
+
+#items-table {
+border: 1px #FFBBBB;
+width: 100%;
+}
+
+#items-table td {
+word-wrap: break-word;
+border: thin #FFBBBB solid;
+padding: 1px;
+}
+
+#items {
+}
+
+.item {
+}
+
+.item_current {
+background-color:#FFEE99;
+}
+
+.item-username {
+}
+
+.item-url {
+}
+
+.item-tags {
+}
+
+.item-notes {
+}
+
+.item-odd {
+
+}
+
+.item-even {
+
+}
+
+.dialog form input {
+margin: .4em;
+}
+
+.sort-asc {
+background-color:#BBFFBB;
+}
+
+.sort-desc {
+background-color:#FFBBBB;
+}
+
+</style>
+</head>
+<body style="margin:0 10px 0 10px;">
+<div style="font-size:200%">ysid</div>
+<div id="info" style="background:white;"></div>
+<div style="float:right;">
+  <a href="javascript:ysid_login_form();">login</a> &nbsp;
+  <a href="javascript:ysid_edit_form();">Add</a> &nbsp;
+  <a href="javascript:ysid_logout();">logout</a>&nbsp;
+  <a href="/quit/">quit</a> &nbsp;
+  <a href="javascript:ysid_show_help()">help</a>
+</div>
+<div style="clear:both"></div>
+
+<form action="javascript:ysid_list('form');">
+<input style="width:80%" type="input" id="list_input" onkeyup="ysid_list('keyup');" onchange="ysid_list('change');" /> &nbsp;
+<span id="list_num"></span> &nbsp;
+<input style="width:10%" type="input" id="password_show" onblur="this.value=''" />
+</form>
+<table id="items-table">
+  <thead><td class="item-username item-field-desc">username</td>
+  <td class="item-url item-field-desc">url</td>
+  <td class="item-tags item-field-desc">tags</td>
+  <td class="item-notes item-field-desc">notes</td>
+  </thead>
+  <tbody id="items"></tbody>
+</table>
+
+<div id="login" class="dialog" style="width:35em;">
+  <h2>login</h2>
+<form method="POST" id="login_form" action="/login/">
+<div class="yui3-g">
+<div class="yui3-u-1-3">path:</div>
+<div class="yui3-u-2-3"><input name="path" /></div>
+<div class="yui3-u-1-3">disk private key:</div>
+<div class="yui3-u-2-3"><input name="dpri" /></div>
+<div class="yui3-u-1-3">disk public key:</div>
+<div class="yui3-u-2-3"><input name="dpub" /></div>
+<div class="yui3-u-1-3">disk private key password:</div>
+<div class="yui3-u-2-3"><input name="password" type="password" /></div>
+<div class="yui3-u-1-3">session private key:</div>
+<div class="yui3-u-2-3"><input name="spri" /></div>
+<div class="yui3-u-1-3">session public key:</div>
+<div class="yui3-u-2-3"><input name="spub" /></div>
+<div class="yui3-u-1-3">truncate logs:</div>
+<div class="yui3-u-2-3"><input name="truncate" /> * empty, negative num. for undo steps.</div>
+<div class="yui3-u-1-3">merge logs:</div>
+<div class="yui3-u-2-3"><input name="merge" />
+  <span style="color:red">* empty, if set, all history is lost, and no undo anymore.</span> </div>
+</div>
+  <div style="float:right;margin:1em;">
+    <input type="submit" value="submit" /> &nbsp;
+    <input type="reset" value="reset" /> &nbsp;
+    <input type="submit" value="cancel" /> &nbsp;
+  </div>
+  <div style="clear:both"></div>
+</form>
+</div>
+
+<div id="edit" class="dialog" style="width:35em">
+  <h2>edit</h2>
+<form method="POST" id="edit_form" action="/put/">
+<input name="uuid" style="display:none" /><br />
+<div class="yui3-g">
+<div class="yui3-u-1-3">Username:</div>
+<div class="yui3-u-2-3"><input name="username" onblur="ysid_random_it(this, '');" /></div>
+<div class="yui3-u-1-3">Url:</div>
+<div class="yui3-u-2-3"><input name="url" /></div>
+<div class="yui3-u-1-3">Tags:</div>
+<div class="yui3-u-2-3"><input name="tags" /></div>
+<div class="yui3-u-1-3">Notes:</div>
+<div class="yui3-u-2-3"><input name="notes" /></div>
+<div class="yui3-u-1-3">Password:</div>
+<div class="yui3-u-2-3"><input name="password" type="password" onblur="ysid_random_it(this, '');" /></div>
+</div>
+<div style="float:right;margin:1em">
+<input type="submit" value="submit" /> &nbsp;
+<input type="reset" value="reset" /> &nbsp;
+<input type="submit" value="cancel" /> &nbsp;
+</div>
+<div style="clear:both"></div>
+<div>
+
+<p>Password and username support random generating. random generating
+using a population and a length, separated by space.</p>
+
+<p>Population:<br />
+  p: ascii printable, l:lower letter, a:letter, u:upper letter, d:digits, h: hex digits, H:HEX digits<br />
+  ld, ad, ud: l and d, a and d, u and d</p>
+
+<p>Length:<br />
+  Just integer, like 10, 20</p>
+
+<p>Example: <code>l 6</code>, <code>p 4</code></p>
+</div>
+</form>
+</div>
+
+<div id="item-menu">
+<div class="menu">
+<div id="d_clip_container" style="position:relative">
+<div id="d_clip_button">
+  <a href="#">copy password</a>
+</div></div>
+</div>
+<div class="menu"><a href="javascript:ysid_menu_item_edit()">edit</a></div>
+<div class="menu"><a href="javascript:ysid_menu_item_show_password()">show password</a></div>
+<div class="menu"><a href="javascript:ysid_menu_item_erase()">erase</a></div>
+</div>
+
+<script type="text/javascript">
+ysid_init();
+</script>
+
+<div class="dialog" id="help">
+  <h2>help</h2>
+  <h3>list filter</h3>
+
+  <p><em>pattern</em>, <em>-pattern</em> or <em>[-]field:pattern</em> separated in spaces</p>
+  <p><em>field</em> = l|url, t|tag|tags, n|note|notes, u|user|username,
+  U|USER|USERNAME(match exactly), User|Username(match only prefix)<br />
+  <em>pattern</em> = just plain string, or regexp, if you know it</p>
+
+  <p>Example: <code>u:ariel.wangyun l:gmail.com</code> will give gmail
+  items with username containing <code>ariel.wangyun</code>.<br />
+  <code>wangyun</code> will give items having string <code>wangyun</code><br />
+  <code>-t:email u:changsheng</code> will give items not tagged by
+  email and username containing <code>changsheng</code></p>
+
+  <h3>shortcuts</h3>
+
+  <div><code>/</code>:&nbsp; input list filter, <code>enter/escape</code> to escape</div>
+  <div><code>j</code>:&nbsp; next item</div>
+  <div><code>k</code>:&nbsp; prev item</div>
+  <div><code>e</code>:&nbsp; edit selected item</div>
+  <div><code>c</code>:&nbsp; copy selected item password</div>
+  <div><code>s</code>:&nbsp; show selected item password</div>
+  <div><code>l</code>:&nbsp; login</div>
+  <div><code>a</code>:&nbsp; add new item</div>
+  <div><code>?</code>:&nbsp; show this help</div>
+
+  <h3>About</h3>
+
+  ysid is written by <code>changsheng@zoho.com</code> for ariel. Using it at your own risk.
+
+  <h3>Concepts</h3>
+
+  Private and public key are RSA private and public keys, private
+  key for decrypt, public key for encrypt. RSA keys can be generated
+  by openssl.  <br />
+
+  Disk private/public keys are used for loading/storing file in
+  crypted. Disk private should protected by a password.  <br />
+
+  Session private/public keys are used for reading/writting memory in crypted.<br />
+
+  <a href="javascript:ysid_close_help();">click here or press any key to exit</a>
+</div>
+
+</body>
+</html>

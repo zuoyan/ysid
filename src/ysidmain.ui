@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>YsidMain</class>
+ <widget class="QMainWindow" name="YsidMain">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>468</width>
+    <height>585</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="ysid_qt.qrc">
+    <normaloff>:/imgs/icon.png</normaloff>:/imgs/icon.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>468</width>
+     <height>19</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
+   <widget class="QMenu" name="menuAutotype">
+    <property name="title">
+     <string>&amp;Autotype</string>
+    </property>
+    <addaction name="actionAutotype"/>
+    <addaction name="actionAutotype_password"/>
+    <addaction name="actionAutotype_username"/>
+    <addaction name="actionAutotype_url"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>&amp;Edit</string>
+    </property>
+    <addaction name="actionCopy_password"/>
+    <addaction name="actionAdd_Item"/>
+    <addaction name="actionEdit"/>
+    <addaction name="actionErase"/>
+   </widget>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <addaction name="actionLogin"/>
+    <addaction name="actionLogout"/>
+    <addaction name="actionOptions"/>
+    <addaction name="actionToolbar"/>
+    <addaction name="actionHttpd"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuAutotype"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionAbout">
+   <property name="text">
+    <string>&amp;About</string>
+   </property>
+  </action>
+  <action name="actionLogin">
+   <property name="icon">
+    <iconset resource="ysid_qt.qrc">
+     <normaloff>:/imgs/login.png</normaloff>:/imgs/login.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Login</string>
+   </property>
+  </action>
+  <action name="actionLogout">
+   <property name="icon">
+    <iconset resource="ysid_qt.qrc">
+     <normaloff>:/imgs/logout.png</normaloff>:/imgs/logout.png</iconset>
+   </property>
+   <property name="text">
+    <string>Lo&amp;gout</string>
+   </property>
+  </action>
+  <action name="actionAdd_Item">
+   <property name="icon">
+    <iconset resource="ysid_qt.qrc">
+     <normaloff>:/imgs/add.png</normaloff>:/imgs/add.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Add Item</string>
+   </property>
+   <property name="shortcut">
+    <string>A</string>
+   </property>
+  </action>
+  <action name="actionEdit">
+   <property name="icon">
+    <iconset resource="ysid_qt.qrc">
+     <normaloff>:/imgs/edit.png</normaloff>:/imgs/edit.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Edit</string>
+   </property>
+   <property name="shortcut">
+    <string>E</string>
+   </property>
+  </action>
+  <action name="actionErase">
+   <property name="icon">
+    <iconset resource="ysid_qt.qrc">
+     <normaloff>:/imgs/delete.png</normaloff>:/imgs/delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>E&amp;rase</string>
+   </property>
+   <property name="shortcut">
+    <string>D</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="icon">
+    <iconset resource="ysid_qt.qrc">
+     <normaloff>:/imgs/exit.png</normaloff>:/imgs/exit.png</iconset>
+   </property>
+   <property name="text">
+    <string>E&amp;xit</string>
+   </property>
+  </action>
+  <action name="actionCopy_password">
+   <property name="icon">
+    <iconset resource="ysid_qt.qrc">
+     <normaloff>:/imgs/copy.png</normaloff>:/imgs/copy.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Copy password</string>
+   </property>
+   <property name="shortcut">
+    <string>C</string>
+   </property>
+  </action>
+  <action name="actionToolbar">
+   <property name="text">
+    <string>Hide &amp;Toolbar</string>
+   </property>
+  </action>
+  <action name="actionHttpd">
+   <property name="text">
+    <string>Start &amp;HTTPD</string>
+   </property>
+  </action>
+  <action name="actionOptions">
+   <property name="text">
+    <string>&amp;Options</string>
+   </property>
+  </action>
+  <action name="actionAutotype">
+   <property name="icon">
+    <iconset resource="ysid_qt.qrc">
+     <normaloff>:/imgs/type.png</normaloff>:/imgs/type.png</iconset>
+   </property>
+   <property name="text">
+    <string>Auto&amp;type</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+V</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::ApplicationShortcut</enum>
+   </property>
+  </action>
+  <action name="actionAutotype_password">
+   <property name="icon">
+    <iconset resource="ysid_qt.qrc">
+     <normaloff>:/imgs/type_password</normaloff>:/imgs/type_password</iconset>
+   </property>
+   <property name="text">
+    <string>Autotype &amp;password</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::ApplicationShortcut</enum>
+   </property>
+  </action>
+  <action name="actionAutotype_username">
+   <property name="icon">
+    <iconset resource="ysid_qt.qrc">
+     <normaloff>:/imgs/type_username</normaloff>:/imgs/type_username</iconset>
+   </property>
+   <property name="text">
+    <string>Autotype &amp;username</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+U</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::ApplicationShortcut</enum>
+   </property>
+  </action>
+  <action name="actionAutotype_url">
+   <property name="icon">
+    <iconset resource="ysid_qt.qrc">
+     <normaloff>:/imgs/type_url</normaloff>:/imgs/type_url</iconset>
+   </property>
+   <property name="text">
+    <string>Autotype ur&amp;l</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="ysid_qt.qrc"/>
+ </resources>
+ <connections/>
+</ui>

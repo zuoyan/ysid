@@ -1,0 +1,18 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+  <qresource>
+    <file>imgs/trayicon.png</file>
+    <file alias="imgs/icon.png">imgs/trayicon.png</file>
+    <file>imgs/add.png</file>
+    <file>imgs/edit.png</file>
+    <file>imgs/copy.png</file>
+    <file>imgs/delete.png</file>
+    <file>imgs/login.png</file>
+    <file>imgs/logout.png</file>
+    <file>imgs/exit.png</file>
+    <file>imgs/type.png</file>
+    <file alias="imgs/type_password">imgs/type_password.png</file>
+    <file alias="imgs/type_url">imgs/type_url.png</file>
+    <file alias="imgs/type_username">imgs/type_user.png</file>
+  </qresource>
+</RCC>

@@ -1,0 +1,17 @@
+/**
+ * @file   ysid_config.h.in
+ * @author Changsheng Jiang <jiangzuoyan@gmail.com>
+ * @date   Tue Nov  9 00:19:39 2010
+ *
+ * @brief configure file for whole ysid project
+ *
+ *
+ */
+
+#ifndef FILE_abe7e454_a091_4a91_b22f_315504d2dfef_H
+#define FILE_abe7e454_a091_4a91_b22f_315504d2dfef_H 1
+
+#define ysid_VERSION_MAJOR @ysid_VERSION_MAJOR@
+#define ysid_VERSION_MINOR @ysid_VERSION_MINOR@
+
+#endif
