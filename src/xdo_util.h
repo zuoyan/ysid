@@ -1,6 +1,6 @@
 /* xdo utility pieces 
  *
- * $Id: xdo_util.h 3029 2010-09-20 22:24:45Z jls@semicomplete.com $
+ * $Id$
  */
 
 #ifndef _XDO_UTIL_H_

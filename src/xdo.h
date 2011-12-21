@@ -1,12 +1,9 @@
 /**
  * @file xdo.h
  */
+
 #ifndef _XDO_H_
 #define _XDO_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #ifndef __USE_XOPEN
 #define __USE_XOPEN
@@ -16,6 +13,12 @@ extern "C" {
 #include <X11/Xlib.h>
 #include <X11/X.h>
 #include <unistd.h>
+#include <wchar.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /**
  * @mainpage
@@ -57,7 +60,7 @@ extern "C" {
  */
 typedef struct keysym_charmap {
   const char *keysym;
-  char key;
+  wchar_t key;
 } keysym_charmap_t;
 
 /**
@@ -66,7 +69,7 @@ typedef struct keysym_charmap {
  * this key (keycode, modifiers, key index, etc)
  */
 typedef struct charcodemap {
-  char key; /** the letter for this key, like 'a' */
+  wchar_t key; /** the letter for this key, like 'a' */
   KeyCode code; /** the keycode that this key is on */
   KeySym symbol; /** the symbol representing this key */
   int index; /** the index in the keysym-per-keycode list that is this key */
@@ -75,6 +78,10 @@ typedef struct charcodemap {
     * exist in the current keymap, this will be set to 1. */
   int needs_binding;
 } charcodemap_t;
+
+typedef enum {
+  XDO_FEATURE_XTEST, /** Is XTest available? */
+} XDO_FEATURES;
 
 /**
  * The main context.
@@ -110,6 +117,16 @@ typedef struct xdo {
 
   /** Should we close the display when calling xdo_free? */
   int close_display_when_freed;
+
+  /** Be extra quiet? (omits some error/message output) */
+  int quiet;
+
+  /** Enable debug output? */
+  int debug;
+
+  /** Feature flags, such as XDO_FEATURE_XTEST, etc... */
+  int features_mask;
+
 } xdo_t;
 
 
@@ -170,6 +187,13 @@ typedef struct xdo_active_mods {
  */
 #define SEARCH_CLASSNAME (1UL << 6)
 
+/**
+ * Search a specific desktop
+ * @see xdo_search.screen
+ * @see xdo_window_search
+ */
+#define SEARCH_DESKTOP (1UL << 7)
+
 
 /**
  * The window search query structure.
@@ -195,6 +219,12 @@ typedef struct xdo_search {
    * @see SEARCH_NAME, SEARCH_CLASS, SEARCH_PID, SEARCH_CLASSNAME, etc
    */
   unsigned int searchmask;
+
+  /** What desktop to search, if any. If none given, search all screens. */
+  long desktop;
+
+  /** How many results to return? If 0, return all. */
+  unsigned int limit;
 } xdo_search_t;
 
 #define XDO_ERROR 1
@@ -359,7 +389,7 @@ int xdo_click_multiple(const xdo_t *xdo, Window window, int button,
  * @param delay The delay between keystrokes in microseconds. 12000 is a decent
  *    choice if you don't have other plans.
  */
-int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay);
+int xdo_type(const xdo_t *xdo, Window window, const char *string, useconds_t delay);
 
 /**
  * Send a keysequence to the specified window.
@@ -504,6 +534,11 @@ int xdo_window_setprop (const xdo_t *xdo, Window wid, const char *property,
  */
 int xdo_window_setclass(const xdo_t *xdo, Window wid, const char *name,
                         const char *klass);
+
+/**
+ * Sets the urgency hint for a window.
+ */
+int xdo_window_seturgency (const xdo_t *xdo, Window wid, int urgency);
 
 /**
  * Set the override_redirect value for a window. This generally means
@@ -710,6 +745,9 @@ int xdo_set_desktop_for_window(const xdo_t *xdo, Window wid, long desktop);
  * Get the desktop a window is on.
  * Uses _NET_WM_DESKTOP of the EWMH spec.
  *
+ * If your desktop does not support _NET_WM_DESKTOP, then '*desktop' remains
+ * unmodified.
+ *
  * @param wid the window to query
  * @param deskto pointer to long where the desktop of the window is stored
  */
@@ -841,9 +879,43 @@ int xdo_get_window_name(const xdo_t *xdo, Window window,
                         unsigned char **name_ret, int *name_len_ret,
                         int *name_type);
 
+/**
+ * Disable an xdo feature.
+ *
+ * This function is mainly used by libxdo itself, however, you may find it useful
+ * in your own applications.
+ *
+ * @see XDO_FEATURES
+ */
+void xdo_disable_feature(xdo_t *xdo, int feature);
+
+/**
+ * Enable an xdo feature.
+ *
+ * This function is mainly used by libxdo itself, however, you may find it useful
+ * in your own applications.
+ *
+ * @see XDO_FEATURES
+ */
+void xdo_enable_feature(xdo_t *xdo, int feature);
+
+/**
+ * Check if a feature is enabled.
+ *
+ * This function is mainly used by libxdo itself, however, you may find it useful
+ * in your own applications.
+ *
+ * @see XDO_FEATURES
+ */
+int xdo_has_feature(xdo_t *xdo, int feature);
+
+/**
+ * Query the viewport (your display) dimensions
+ */
+int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
+                                unsigned int *height, int screen);
 #ifdef __cplusplus
-}// extern  C
+}
 #endif
+
 #endif /* ifndef _XDO_H_ */
-
-

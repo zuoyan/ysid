@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
   if (idx < argc) {
     parser.help();
   }
-  int quit_flag;
+  int quit_flag = 0;
   std::unique_ptr<ysid_db> pdb(new ysid_db());
   void *ctx = start_server(pdb.get(), www_root, port, &quit_flag);
   if (!ctx) {

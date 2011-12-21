@@ -44,6 +44,6 @@ ELSE()
     ysid_httpd_server.cpp clipboard.cpp
     mongoose.c xdo.c)
 
-  TARGET_LINK_LIBRARIES(ysid_qt ${QT_LIBRARIES} X11 Xtst)
+  TARGET_LINK_LIBRARIES(ysid_qt ${QT_LIBRARIES} X11 Xtst Xinerama)
 
 ENDIF()

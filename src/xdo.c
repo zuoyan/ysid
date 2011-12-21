@@ -18,13 +18,17 @@
 #include <unistd.h>
 #include <regex.h>
 #include <ctype.h>
+#include <locale.h>
+#include <stdarg.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xresource.h>
 #include <X11/Xutil.h>
 #include <X11/extensions/XTest.h>
+#include <X11/extensions/Xinerama.h>
 #include <X11/keysym.h>
+#include <X11/cursorfont.h>
 
 #include "xdo.h"
 #include "xdo_util.h"
@@ -36,7 +40,7 @@
  * % setxkbmap -option * grp:switch,grp:shifts_toggle us,se
  * Then hit both shift-keys simultaneously to switch to 'se' key layout
  * and back again. */
-#define ModeSwitchMask 0x20000
+#define ModeSwitchMask 0x2000
 
 #define DEFAULT_DELAY 12
 
@@ -49,10 +53,10 @@
 static void _xdo_populate_charcode_map(xdo_t *xdo);
 static int _xdo_has_xtest(const xdo_t *xdo);
 
-static KeyCode _xdo_keycode_from_char(const xdo_t *xdo, char key);
-static KeySym _xdo_keysym_from_char(const xdo_t *xdo, char key);
+static KeyCode _xdo_keycode_from_char(const xdo_t *xdo, wchar_t key);
+static KeySym _xdo_keysym_from_char(const xdo_t *xdo, wchar_t key);
 //static int _xdo_get_shiftcode_if_needed(const xdo_t *xdo, char key);
-static int _xdo_get_key_index(const xdo_t *xdo, char key);
+static int _xdo_get_key_index(const xdo_t *xdo, wchar_t key);
 
 static int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
                                             charcodemap_t **keys, int *nkeys);
@@ -68,10 +72,12 @@ static int _xdo_cached_keycode_to_modifier(const xdo_t *xdo, KeyCode keycode);
 static int _xdo_cached_modifier_to_keycode(const xdo_t *xdo, int modmask);
 static int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press);
 
-static int _is_success(const char *funcname, int code);
+static int _is_success(const char *funcname, int code, const xdo_t *xdo);
+static void _xdo_debug(const xdo_t *xdo, const char *format, ...);
+static void _xdo_eprintf(const xdo_t *xdo, int hushable, const char *format, ...);
 
 /* context-free functions */
-static char _keysym_to_char(const char *keysym);
+static wchar_t _keysym_to_char(const char *keysym);
 
 /* Default to -1, initialize it when we need it */
 static Atom atom_NET_WM_PID = -1;
@@ -84,8 +90,13 @@ xdo_t* xdo_new(char *display_name) {
   Display *xdpy;
 
   if ((xdpy = XOpenDisplay(display_name)) == NULL) {
+    /* Can't use _xdo_eprintf yet ... */
     fprintf(stderr, "Error: Can't open display: %s\n", display_name);
     return NULL;
+  }
+
+  if (display_name == NULL) {
+    display_name = getenv("DISPLAY");
   }
 
   return xdo_new_with_opened_display(xdpy, display_name, 1);
@@ -96,6 +107,7 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
   xdo_t *xdo = NULL;
 
   if (xdpy == NULL) {
+    /* Can't use _xdo_eprintf yet ... */
     fprintf(stderr, "xdo_new: xdisplay I was given is a null pointer\n");
     return NULL;
   }
@@ -107,14 +119,22 @@ xdo_t* xdo_new_with_opened_display(Display *xdpy, const char *display,
   xdo->xdpy = xdpy;
   xdo->close_display_when_freed = close_display_when_freed;
 
-  if (display == NULL)
+  if (display == NULL) {
     display = "unknown";
+  }
 
-  if (!_xdo_has_xtest(xdo)) {
-    fprintf(stderr, "Error: XTEST extension unavailable on '%s'.",
-            xdo->display_name);
-    xdo_free(xdo);
-    return NULL;
+  if (getenv("XDO_QUIET")) {
+    xdo->quiet = True;
+  }
+
+  if (_xdo_has_xtest(xdo)) {
+    xdo_enable_feature(xdo, XDO_FEATURE_XTEST);
+    _xdo_debug(xdo, "XTEST enabled.");
+  } else {
+    _xdo_eprintf(xdo, False, "Warning: XTEST extension unavailable on '%s'. Some"
+                " functionality may be disabled; See 'man xdotool' for more"
+                " info.", xdo->display_name);
+    xdo_disable_feature(xdo, XDO_FEATURE_XTEST);
   }
 
   _xdo_populate_charcode_map(xdo);
@@ -156,21 +176,21 @@ int xdo_window_map(const xdo_t *xdo, Window wid) {
   int ret = 0;
   ret = XMapWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
-  return _is_success("XMapWindow", ret == 0);
+  return _is_success("XMapWindow", ret == 0, xdo);
 }
 
 int xdo_window_unmap(const xdo_t *xdo, Window wid) {
   int ret = 0;
   ret = XUnmapWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
-  return _is_success("XUnmapWindow", ret == 0);
+  return _is_success("XUnmapWindow", ret == 0, xdo);
 }
 
 int xdo_window_reparent(const xdo_t *xdo, Window wid_source, Window wid_target) {
   int ret = 0;
   ret = XReparentWindow(xdo->xdpy, wid_source, wid_target, 0, 0);
   XFlush(xdo->xdpy);
-  return _is_success("XReparentWindow", ret == 0);
+  return _is_success("XReparentWindow", ret == 0, xdo);
 }
 
 int xdo_get_window_location(const xdo_t *xdo, Window wid,
@@ -198,7 +218,7 @@ int xdo_get_window_location(const xdo_t *xdo, Window wid,
       *screen_ret = attr.screen;
     }
   }
-  return _is_success("XGetWindowAttributes", ret == 0);
+  return _is_success("XGetWindowAttributes", ret == 0, xdo);
 }
 
 int xdo_get_window_size(const xdo_t *xdo, Window wid, unsigned int *width_ret,
@@ -215,7 +235,7 @@ int xdo_get_window_size(const xdo_t *xdo, Window wid, unsigned int *width_ret,
       *height_ret = attr.height;
     }
   }
-  return _is_success("XGetWindowAttributes", ret == 0);
+  return _is_success("XGetWindowAttributes", ret == 0, xdo);
 }
 
 int xdo_window_move(const xdo_t *xdo, Window wid, int x, int y) {
@@ -225,7 +245,7 @@ int xdo_window_move(const xdo_t *xdo, Window wid, int x, int y) {
   wc.y = y;
 
   ret = XConfigureWindow(xdo->xdpy, wid, CWX | CWY, &wc);
-  return _is_success("XConfigureWindow", ret == 0);
+  return _is_success("XConfigureWindow", ret == 0, xdo);
 }
 
 int xdo_window_translate_with_sizehint(const xdo_t *xdo, Window window,
@@ -291,7 +311,7 @@ int xdo_window_setsize(const xdo_t *xdo, Window window, int width, int height, i
 
   ret = XConfigureWindow(xdo->xdpy, window, cw_flags, &wc);
   XFlush(xdo->xdpy);
-  return _is_success("XConfigureWindow", ret == 0);
+  return _is_success("XConfigureWindow", ret == 0, xdo);
 }
 
 int xdo_window_set_override_redirect(const xdo_t *xdo, Window wid,
@@ -302,7 +322,7 @@ int xdo_window_set_override_redirect(const xdo_t *xdo, Window wid,
   wattr.override_redirect = override_redirect;
   ret = XChangeWindowAttributes(xdo->xdpy, wid, mask, &wattr);
 
-  return _is_success("XChangeWindowAttributes", ret == 0);
+  return _is_success("XChangeWindowAttributes", ret == 0, xdo);
 }
 
 int xdo_window_setclass (const xdo_t *xdo, Window wid, const char *name,
@@ -318,7 +338,23 @@ int xdo_window_setclass (const xdo_t *xdo, Window wid, const char *name,
 
   ret = XSetClassHint(xdo->xdpy, wid, hint);
   XFree(hint);
-  return _is_success("XSetClassHint", ret == 0);
+  return _is_success("XSetClassHint", ret == 0, xdo);
+}
+
+int xdo_window_seturgency (const xdo_t *xdo, Window wid, int urgency) {
+  int ret = 0;
+  XWMHints *hint = XGetWMHints(xdo->xdpy, wid);
+  if (hint == NULL)
+    hint = XAllocWMHints();
+
+  if (urgency)
+    hint->flags = hint->flags | XUrgencyHint;
+  else
+    hint->flags = hint->flags & ~XUrgencyHint;
+
+  ret = XSetWMHints(xdo->xdpy, wid, hint);
+  XFree(hint);
+  return _is_success("XSetWMHint", ret == 0, xdo);
 }
 
 int xdo_window_setprop (const xdo_t *xdo, Window wid, const char *property, const char *value) {
@@ -333,7 +369,7 @@ int xdo_window_setprop (const xdo_t *xdo, Window wid, const char *property, cons
                         XInternAtom(xdo->xdpy, "STRING", False), 8,
                         PropModeReplace, (unsigned char*)value, strlen(value));
   if (ret == 0) {
-    return _is_success("XChangeProperty", ret == 0);
+    return _is_success("XChangeProperty", ret == 0, xdo);
   }
 
   // Change _NET_<property> just in case for simpler NETWM compliance?
@@ -341,14 +377,14 @@ int xdo_window_setprop (const xdo_t *xdo, Window wid, const char *property, cons
                         XInternAtom(xdo->xdpy, netwm_property, False),
                         XInternAtom(xdo->xdpy, "STRING", False), 8,
                         PropModeReplace, (unsigned char*)value, strlen(value));
-  return _is_success("XChangeProperty", ret == 0);
+  return _is_success("XChangeProperty", ret == 0, xdo);
 }
 
 int xdo_window_focus(const xdo_t *xdo, Window wid) {
   int ret = 0;
   ret = XSetInputFocus(xdo->xdpy, wid, RevertToParent, CurrentTime);
   XFlush(xdo->xdpy);
-  return _is_success("XSetInputFocus", ret == 0);
+  return _is_success("XSetInputFocus", ret == 0, xdo);
 }
 
 int xdo_window_wait_for_size(const xdo_t *xdo, Window window,
@@ -448,7 +484,7 @@ int xdo_window_activate(const xdo_t *xdo, Window wid) {
 
   /* XXX: XSendEvent returns 0 on conversion failure, nonzero otherwise.
    * Manpage says it will only generate BadWindow or BadValue errors */
-  return _is_success("XSendEvent[EWMH:_NET_ACTIVE_WINDOW]", ret == 0);
+  return _is_success("XSendEvent[EWMH:_NET_ACTIVE_WINDOW]", ret == 0, xdo);
 }
 
 int xdo_set_number_of_desktops(const xdo_t *xdo, long ndesktops) {
@@ -479,7 +515,7 @@ int xdo_set_number_of_desktops(const xdo_t *xdo, long ndesktops) {
                    SubstructureNotifyMask | SubstructureRedirectMask,
                    &xev);
 
-  return _is_success("XSendEvent[EWMH:_NET_NUMBER_OF_DESKTOPS]", ret == 0);
+  return _is_success("XSendEvent[EWMH:_NET_NUMBER_OF_DESKTOPS]", ret == 0, xdo);
 }
 
 int xdo_get_number_of_desktops(const xdo_t *xdo, long *ndesktops) {
@@ -510,7 +546,7 @@ int xdo_get_number_of_desktops(const xdo_t *xdo, long *ndesktops) {
   free(data);
 
   return _is_success("XGetWindowProperty[_NET_NUMBER_OF_DESKTOPS]",
-                     *ndesktops == 0);
+                     *ndesktops == 0, xdo);
 }
 
 int xdo_set_current_desktop(const xdo_t *xdo, long desktop) {
@@ -542,7 +578,7 @@ int xdo_set_current_desktop(const xdo_t *xdo, long desktop) {
                    SubstructureNotifyMask | SubstructureRedirectMask,
                    &xev);
 
-  return _is_success("XSendEvent[EWMH:_NET_CURRENT_DESKTOP]", ret == 0);
+  return _is_success("XSendEvent[EWMH:_NET_CURRENT_DESKTOP]", ret == 0, xdo);
 }
 
 int xdo_get_current_desktop(const xdo_t *xdo, long *desktop) {
@@ -574,7 +610,7 @@ int xdo_get_current_desktop(const xdo_t *xdo, long *desktop) {
   free(data);
 
   return _is_success("XGetWindowProperty[_NET_CURRENT_DESKTOP]",
-                     *desktop == -1);
+                     *desktop == -1, xdo);
 }
 
 int xdo_set_desktop_for_window(const xdo_t *xdo, Window wid, long desktop) {
@@ -605,7 +641,7 @@ int xdo_set_desktop_for_window(const xdo_t *xdo, Window wid, long desktop) {
                    SubstructureNotifyMask | SubstructureRedirectMask,
                    &xev);
 
-  return _is_success("XSendEvent[EWMH:_NET_WM_DESKTOP]", ret == 0);
+  return _is_success("XSendEvent[EWMH:_NET_WM_DESKTOP]", ret == 0, xdo);
 }
 
 int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop) {
@@ -635,7 +671,7 @@ int xdo_get_desktop_for_window(const xdo_t *xdo, Window wid, long *desktop) {
   free(data);
 
   return _is_success("XGetWindowProperty[_NET_WM_DESKTOP]",
-                     *desktop == -1);
+                     *desktop == -1, xdo);
 }
 
 int xdo_window_get_active(const xdo_t *xdo, Window *window_ret) {
@@ -665,7 +701,7 @@ int xdo_window_get_active(const xdo_t *xdo, Window *window_ret) {
   free(data);
 
   return _is_success("XGetWindowProperty[_NET_ACTIVE_WINDOW]",
-                     *window_ret == 0);
+                     *window_ret == 0, xdo);
 }
 
 int xdo_window_select_with_click(const xdo_t *xdo, Window *window_ret) {
@@ -679,9 +715,10 @@ int xdo_window_select_with_click(const xdo_t *xdo, Window *window_ret) {
    * out what the client window is.
    * Also, everyone else who does 'select window' does it this way.
    */
+  Cursor cursor = XCreateFontCursor(xdo->xdpy, XC_target);
   int grab_ret = 0;
   grab_ret = XGrabPointer(xdo->xdpy, screen->root, False, ButtonReleaseMask,
-               GrabModeSync, GrabModeAsync, screen->root, None, CurrentTime);
+               GrabModeSync, GrabModeAsync, screen->root, cursor, CurrentTime);
   if (grab_ret == AlreadyGrabbed) {
     fprintf(stderr, "Attempt to grab the mouse failed. Something already has"
             " the mouse grabbed. This can happen if you are dragging something"
@@ -693,6 +730,7 @@ int xdo_window_select_with_click(const xdo_t *xdo, Window *window_ret) {
   XAllowEvents(xdo->xdpy, SyncPointer, CurrentTime);
   XWindowEvent(xdo->xdpy, screen->root, ButtonReleaseMask, &e);
   XUngrabPointer(xdo->xdpy, CurrentTime);
+  XFreeCursor(xdo->xdpy, cursor);
 
   /* If there is no subwindow, then we clicked on the root window */
   if (e.xbutton.subwindow == 0) {
@@ -701,6 +739,7 @@ int xdo_window_select_with_click(const xdo_t *xdo, Window *window_ret) {
      /* Random testing showed that that 'root' always is the same as 'window'
       * while 'subwindow' is the actual window we clicked on. Confusing... */
      *window_ret = e.xbutton.subwindow;
+    _xdo_debug(xdo, "Click on window %lu foo", *window_ret);
     xdo_window_find_client(xdo, *window_ret, window_ret, XDO_FIND_CHILDREN);
   }
   return XDO_SUCCESS;
@@ -711,7 +750,7 @@ int xdo_window_raise(const xdo_t *xdo, Window wid) {
   int ret = 0;
   ret = XRaiseWindow(xdo->xdpy, wid);
   XFlush(xdo->xdpy);
-  return _is_success("XRaiseWindow", ret == 0);
+  return _is_success("XRaiseWindow", ret == 0, xdo);
 }
 
 int xdo_mousemove(const xdo_t *xdo, int x, int y, int screen)  {
@@ -725,7 +764,7 @@ int xdo_mousemove(const xdo_t *xdo, int x, int y, int screen)  {
   Window screen_root = RootWindow(xdo->xdpy, screen);
   ret = XWarpPointer(xdo->xdpy, None, screen_root, 0, 0, 0, 0, x, y);
   XFlush(xdo->xdpy);
-  return _is_success("XWarpPointer", ret == 0);
+  return _is_success("XWarpPointer", ret == 0, xdo);
 }
 
 int xdo_mousemove_relative_to_window(const xdo_t *xdo, Window window, int x, int y) {
@@ -743,7 +782,7 @@ int xdo_mousemove_relative(const xdo_t *xdo, int x, int y)  {
   int ret = 0;
   ret = XTestFakeRelativeMotionEvent(xdo->xdpy, x, y, CurrentTime);
   XFlush(xdo->xdpy);
-  return _is_success("XTestFakeRelativeMotionEvent", ret == 0);
+  return _is_success("XTestFakeRelativeMotionEvent", ret == 0, xdo);
 }
 
 int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) {
@@ -752,7 +791,7 @@ int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) 
   if (window == CURRENTWINDOW) {
     ret = XTestFakeButtonEvent(xdo->xdpy, button, is_press, CurrentTime);
     XFlush(xdo->xdpy);
-    return _is_success("XTestFakeButtonEvent(down)", ret == 0);
+    return _is_success("XTestFakeButtonEvent(down)", ret == 0, xdo);
   } else {
     /* Send to specific window */
     int screen = 0;
@@ -794,7 +833,7 @@ int _xdo_mousebutton(const xdo_t *xdo, Window window, int button, int is_press) 
     ret = XSendEvent(xdo->xdpy, window, True, ButtonPressMask, (XEvent *)&xbpe);
     XFlush(xdo->xdpy);
     xdo_free_active_modifiers(active_mods);
-    return _is_success("XSendEvent(mousedown)", ret == 0);
+    return _is_success("XSendEvent(mousedown)", ret == 0, xdo);
   }
 }
 
@@ -867,7 +906,7 @@ int xdo_mouselocation2(const xdo_t *xdo, int *x_ret, int *y_ret,
     if (window_ret != NULL) *window_ret = window;
   }
 
-  return _is_success("XQueryPointer", ret == False);
+  return _is_success("XQueryPointer", ret == False, xdo);
 }
 
 int xdo_click(const xdo_t *xdo, Window window, int button) {
@@ -900,8 +939,7 @@ int xdo_click_multiple(const xdo_t *xdo, Window window, int button,
 } /* int xdo_click_multiple */
 
 /* XXX: Return proper code if errors found */
-int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
-  int i = 0;
+int xdo_type(const xdo_t *xdo, Window window, const char *string, useconds_t delay) {
 
   /* Since we're doing down/up, the delay should be based on the number
    * of keys pressed (including shift). Since up/down is two calls,
@@ -914,8 +952,14 @@ int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
   //charcodemap_t *keys = calloc(nkeys, sizeof(charcodemap_t));
   charcodemap_t key;
   //int modifier = 0;
-  for (i = 0; string[i] != '\0'; i++) {
-    key.key = string[i];
+  setlocale(LC_CTYPE,"");
+  mbstate_t ps = { 0 };
+  ssize_t len;
+  while ( (len = mbsrtowcs(&key.key, &string, 1, &ps)) ) {
+    if (len == -1) {
+      fprintf(stderr, "Invalid multi-byte sequence encountered\n");
+      return XDO_ERROR;
+    }
     key.code = _xdo_keycode_from_char(xdo, key.key);
     key.symbol = _xdo_keysym_from_char(xdo, key.key);
     key.modmask = 0;
@@ -931,7 +975,7 @@ int xdo_type(const xdo_t *xdo, Window window, char *string, useconds_t delay) {
       }
 
       if (key.symbol == NoSymbol) {
-        fprintf(stderr, "I don't what key produces '%c', skipping.\n",
+        fprintf(stderr, "I don't what key produces '%lc', skipping.\n",
                 key.key);
         continue;
       }
@@ -1013,7 +1057,7 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
                             int nkeys, int pressed, int *modifier, useconds_t delay) {
   int i = 0;
   int modstate = 0;
-  int keymapchanged;
+  int keymapchanged = 0;
 
   /* Find an unused keycode in case we need to bind unmapped keysyms */
   KeySym *keysyms = NULL;
@@ -1032,6 +1076,8 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
       symname = XKeysymToString(keysyms[symindex]);
       if (keysyms[symindex] != 0) {
         key_is_empty = 0;
+      } else {
+        break;
       }
     }
     if (key_is_empty) {
@@ -1049,7 +1095,7 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
   for (i = 0; i < nkeys; i++) {
     if (keys[i].needs_binding == 1) {
       KeySym keysym_list[] = { keys[i].symbol };
-      fprintf(stderr, "Mapping sym %lu to %d\n", keys[i].symbol, scratch_keycode);
+      _xdo_debug(xdo, "Mapping sym %lu to %d", keys[i].symbol, scratch_keycode);
       XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
       XSync(xdo->xdpy, False);
       /* override the code in our current key to use the scratch_keycode */
@@ -1078,6 +1124,8 @@ int xdo_keysequence_list_do(const xdo_t *xdo, Window window, charcodemap_t *keys
 
   if (keymapchanged) {
     KeySym keysym_list[] = { 0 };
+    _xdo_debug(xdo, "Reverting scratch keycode (sym %lu to %d)",
+              keys[i].symbol, scratch_keycode);
     XChangeKeyboardMapping(xdo->xdpy, scratch_keycode, 1, keysym_list, 1);
   }
 
@@ -1122,7 +1170,7 @@ int xdo_window_get_focus(const xdo_t *xdo, Window *window_ret) {
             "XGetInputFocus returned the focused window of %ld. "
             "This is likely a bug in the X server.\n", *window_ret);
   }
-  return _is_success("XGetInputFocus", ret == 0);
+  return _is_success("XGetInputFocus", ret == 0, xdo);
 }
 
 int xdo_window_wait_for_focus(const xdo_t *xdo, Window window, int want_focus) {
@@ -1153,12 +1201,11 @@ int xdo_window_wait_for_focus(const xdo_t *xdo, Window window, int want_focus) {
 int xdo_window_sane_get_focus(const xdo_t *xdo, Window *window_ret) {
   xdo_window_get_focus(xdo, window_ret);
   xdo_window_find_client(xdo, *window_ret, window_ret, XDO_FIND_PARENTS);
-  return _is_success("xdo_window_sane_get_focus", *window_ret == 0);
+  return _is_success("xdo_window_sane_get_focus", *window_ret == 0, xdo);
 }
 
 int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
                            int direction) {
-  //printf("call findclient: %ld\n", window);
   /* for XQueryTree */
   Window dummy, parent, *children = NULL;
   unsigned int nchildren;
@@ -1171,24 +1218,28 @@ int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
     }
 
     long items;
+    _xdo_debug(xdo, "getwinprop on %lu", window);
     xdo_getwinprop(xdo, window, atom_wmstate, &items, NULL, NULL);
 
     if (items == 0) {
       /* This window doesn't have WM_STATE property, keep searching. */
+      _xdo_debug(xdo, "window %lu has no WM_STATE property, digging more.", window);
       XQueryTree(xdo->xdpy, window, &dummy, &parent, &children, &nchildren);
 
       if (direction == XDO_FIND_PARENTS) {
+        _xdo_debug(xdo, "searching parents");
         /* Don't care about the children, but we still need to free them */
         if (children != NULL)
           XFree(children);
         window = parent;
       } else if (direction == XDO_FIND_CHILDREN) {
+        _xdo_debug(xdo, "searching %d children", nchildren);
         unsigned int i = 0;
         int ret;
         done = True; /* recursion should end us */
-        for (i = 0; i < nchildren && !done; i++) {
+        for (i = 0; i < nchildren; i++) {
           ret = xdo_window_find_client(xdo, children[i], &window, direction);
-          printf("findclient: %ld\n", window);
+          fprintf(stderr, "findclient: %ld\n", window);
           if (ret == XDO_SUCCESS) {
             *window_ret = window;
             break;
@@ -1215,7 +1266,7 @@ int xdo_window_find_client(const xdo_t *xdo, Window window, Window *window_ret,
 }
 
 /* Helper functions */
-static KeyCode _xdo_keycode_from_char(const xdo_t *xdo, char key) {
+static KeyCode _xdo_keycode_from_char(const xdo_t *xdo, wchar_t key) {
   int i = 0;
   int len = xdo->charcodes_len;
 
@@ -1228,7 +1279,7 @@ static KeyCode _xdo_keycode_from_char(const xdo_t *xdo, char key) {
   return 0;
 }
 
-static KeySym _xdo_keysym_from_char(const xdo_t *xdo, char key) {
+static KeySym _xdo_keysym_from_char(const xdo_t *xdo, wchar_t key) {
   int i = 0;
   int len = xdo->charcodes_len;
 
@@ -1242,12 +1293,14 @@ static KeySym _xdo_keysym_from_char(const xdo_t *xdo, char key) {
     }
   }
 
+  if (key >= 0x100) key += 0x01000000;
+  if (XKeysymToString(key)) return key;
   return NoSymbol;
 }
 
 /* TODO(sissel): Return the keycodes (for modifiers) required to type a given
  * key */
-static int _xdo_get_key_index(const xdo_t *xdo, char key) {
+static int _xdo_get_key_index(const xdo_t *xdo, wchar_t key) {
   int i = 0;
   int len = xdo->charcodes_len;
 
@@ -1334,7 +1387,7 @@ static void _xdo_populate_charcode_map(xdo_t *xdo) {
 }
 
 /* context-free functions */
-char _keysym_to_char(const char *keysym) {
+wchar_t _keysym_to_char(const char *keysym) {
   int i;
 
   if (keysym == NULL)
@@ -1445,6 +1498,7 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
         /* Inject a 'shift' key item if we should be using shift */
         (*keys)[*nkeys].symbol = NoSymbol;
         (*keys)[*nkeys].code = shift_keycode;
+        (*keys)[*nkeys].needs_binding = 0;
         (*keys)[*nkeys].index = 0;
         (*nkeys)++;
 
@@ -1474,9 +1528,9 @@ int _xdo_keysequence_to_keycode_list(const xdo_t *xdo, const char *keyseq,
   return True;
 }
 
-int _is_success(const char *funcname, int code) {
+int _is_success(const char *funcname, int code, const xdo_t *xdo) {
   /* Nonzero is failure. */
-  if (code != 0)
+  if (code != 0 && !xdo->quiet)
     fprintf(stderr, "%s failed (code=%d)\n", funcname, code);
   return code;
 }
@@ -1910,13 +1964,13 @@ int xdo_set_desktop_viewport(const xdo_t *xdo, int x, int y) {
 
   /* XXX: XSendEvent returns 0 on conversion failure, nonzero otherwise.
    * Manpage says it will only generate BadWindow or BadValue errors */
-  return _is_success("XSendEvent[EWMH:_NET_DESKTOP_VIEWPORT]", ret == 0);
+  return _is_success("XSendEvent[EWMH:_NET_DESKTOP_VIEWPORT]", ret == 0, xdo);
 }
 
 int xdo_window_kill(const xdo_t *xdo, Window window) {
   int ret;
   ret = XKillClient(xdo->xdpy, window);
-  return _is_success("XKillClient", ret == 0);
+  return _is_success("XKillClient", ret == 0, xdo);
 }
 
 int xdo_get_window_name(const xdo_t *xdo, Window window,
@@ -1968,5 +2022,66 @@ int xdo_window_minimize(const xdo_t *xdo, Window window) {
 
   /* Minimize it */
   ret = XIconifyWindow(xdo->xdpy, window, screen);
-  return _is_success("XIconifyWindow", ret == 0);
+  return _is_success("XIconifyWindow", ret == 0, xdo);
+}
+
+void _xdo_debug(const xdo_t *xdo, const char *format, ...) {
+  va_list args;
+
+  va_start(args, format);
+  if (xdo->debug) {
+    vfprintf(stderr, format, args);
+    fprintf(stderr, "\n");
+  }
+} /* _xdo_debug */
+
+/* Used for printing things conditionally based on xdo->quiet */
+void _xdo_eprintf(const xdo_t *xdo, int hushable, const char *format, ...) {
+  va_list args;
+
+  va_start(args, format);
+  if (xdo->quiet == True && hushable) {
+    return;
+  }
+
+  vfprintf(stderr, format, args);
+  fprintf(stderr, "\n");
+} /* _xdo_eprintf */
+
+void xdo_enable_feature(xdo_t *xdo, int feature) {
+  xdo->features_mask |= (0 << feature);
+}
+
+void xdo_disable_feature(xdo_t *xdo, int feature) {
+  xdo->features_mask &= ~(1 << feature);
+}
+
+int xdo_has_feature(xdo_t *xdo, int feature) {
+  return (xdo->features_mask & (1 << feature));
+}
+
+int xdo_get_viewport_dimensions(xdo_t *xdo, unsigned int *width,
+                                unsigned int *height, int screen) {
+  int dummy;
+
+  if (XineramaQueryExtension(xdo->xdpy, &dummy, &dummy) \
+      && XineramaIsActive(xdo->xdpy)) {
+    XineramaScreenInfo *info;
+    int screens;
+
+    info = XineramaQueryScreens(xdo->xdpy, &screens);
+    if (screen < 0 || screen >= screens) {
+      fprintf(stderr, "Invalid screen number %d outside range 0 - %d\n",
+              screen, screens - 1);
+      return XDO_ERROR;
+    }
+    *width = (unsigned int) info[screen].width;
+    *height = (unsigned int) info[screen].height;
+    XFree(info);
+    return XDO_SUCCESS;
+  } else {
+    /* Use the root window size if no zinerama */
+    Window root = RootWindow(xdo->xdpy, screen);
+    return xdo_get_window_size(xdo, root, width, height);
+  }
 }
