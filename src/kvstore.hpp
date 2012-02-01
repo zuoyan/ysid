@@ -9,6 +9,7 @@
 #define FILE_58ffcf4e_36be_432c_af01_a5ccaf040e0a_H 1
 #include "ysid.hpp"
 #include <functional>
+#include "string.hpp"
 
 namespace ysid {
 
@@ -34,7 +35,7 @@ struct kvstore {
   virtual ~kvstore();
 };
 
-kvstore* new_file_kvstore(const std::string &path);
+kvstore* new_file_kvstore(const string &path);
 kvstore* new_mem_kvstore();
 } // namespace ysid
 #endif

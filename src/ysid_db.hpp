@@ -7,11 +7,10 @@
  */
 #ifndef FILE_8f445760_656d_4f5c_8a70_3af8242425f4_H
 #define FILE_8f445760_656d_4f5c_8a70_3af8242425f4_H 1
-#include <string>
+#include "string.hpp"
 
 namespace ysid {
 
-using std::string;
 
 struct kvstore;
 struct ysid_db_impl;

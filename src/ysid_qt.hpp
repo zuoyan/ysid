@@ -10,6 +10,7 @@
 #include "ysid.hpp"
 #include <QtCore>
 
+ysid::string qstring_to_local8bit(const QString &qs);
 ysid::string qstring_to_utf8(const QString &qs);
 ysid::string options_get_str(const ysid::string &key, const ysid::string &dft="");
 QString options_get_qstr(const ysid::string &key, const QString &dft="");

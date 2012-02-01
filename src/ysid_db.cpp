@@ -189,7 +189,8 @@ struct ysid_db_impl {
         if (m_dcipher->decrypt(m_dcipher->encrypt("test")) != "test")
           throw std::runtime_error("cds decrypt/encrypt(test) != test");
       } catch (std::runtime_error &e) {
-        throw std::runtime_error(string("cds(): got exception ") + e.what());
+        throw std::runtime_error(
+            std::string("cds(): got exception: ") + e.what());
       }
       if (m_ds.get()) m_cds.reset(new_crypt_store(m_dcipher.get(), m_ds.get()));
     }

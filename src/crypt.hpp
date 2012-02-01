@@ -7,11 +7,10 @@
  */
 #ifndef FILE_4b23ca83_d29b_4ccb_9209_a065d047ba22_H
 #define FILE_4b23ca83_d29b_4ccb_9209_a065d047ba22_H 1
-#include <string>
+#include "string.hpp"
 #include <functional>
 
 namespace ysid {
-using std::string;
 
 struct cipher {
   virtual string encrypt(const string &plain) = 0;

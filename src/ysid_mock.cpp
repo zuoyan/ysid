@@ -6,6 +6,7 @@
  *
  */
 #include <string>
+#include "string.hpp"
 #include "ysid_db.hpp"
 #include "item.hpp"
 #include "ffile.hpp"
@@ -18,7 +19,6 @@
 #include <ctime>
 
 using namespace ysid;
-using std::string;
 
 string random_string(mt_random &m, const string &pop, size_t n) {
   string r(n, 0);

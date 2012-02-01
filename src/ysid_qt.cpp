@@ -15,6 +15,11 @@
 #include <QTextCodec>
 #include "GlobalHot.hpp"
 
+ysid::string qstring_to_local8bit(const QString &qs) {
+  auto qb = qs.toLocal8Bit();
+  return ysid::string(qb.begin(), qb.end());
+}
+
 ysid::string qstring_to_utf8(const QString &qs) {
   auto qb = qs.toUtf8();
   return ysid::string(qb.begin(), qb.end());

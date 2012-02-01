@@ -7,14 +7,12 @@
  */
 #ifndef FILE_88271a93_688a_4bfb_9c27_e2d87ef86116_H
 #define FILE_88271a93_688a_4bfb_9c27_e2d87ef86116_H
-#include <string>
+#include "string.hpp"
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 namespace ysid {
-
-using std::string;
 
 struct item {
   static string new_uuid();

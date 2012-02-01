@@ -11,6 +11,7 @@
 #include <ctime>
 #include <sstream>
 #include "crypt.hpp"
+#include "ysid.hpp"
 
 namespace ysid {
 
@@ -120,7 +121,7 @@ void item::generate_password(const string &cfg) {
     }
     return s;
   };
-  auto rand_pop = [](const string &pop, size_t l) -> string {
+  auto rand_pop = [](const std::string &pop, size_t l) -> string {
     string s(l, 0);
     for (size_t i = 0; i < l; ++i) {
       s[i] = pop[merge_random() % pop.size()];
@@ -136,12 +137,13 @@ void item::generate_password(const string &cfg) {
   const char *ud = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   const char *h = "0123456789abcdef";
   const char *H = "0123456789ABCDEF";
-  const char *pop = NULL;
+  const char *hh = "0123456789ABCDEFabcdef";
+  std::string pop = "";
   size_t len = 15;
   if (cfg.size()) {
-    std::istringstream iss(cfg);
+    std::istringstream iss(to_std_string(cfg));
     while (iss.good()) {
-      string p;
+      std::string p;
       iss >> p;
       if (iss.fail()) break;
       if (p.size() && isdigit(p[0])) {
@@ -150,18 +152,21 @@ void item::generate_password(const string &cfg) {
         continue;
       }
       if (p == "d") pop = d;
-      if (p == "l") pop = l;
-      if (p == "u") pop = u;
-      if (p == "a") pop = a;
-      if (p == "ad") pop = ad;
-      if (p == "ld") pop = ld;
-      if (p == "ud") pop = ud;
-      if (p == "h") pop = h;
-      if (p == "H") pop = H;
+      else if (p == "l") pop = l;
+      else if (p == "u") pop = u;
+      else if (p == "a") pop = a;
+      else if (p == "ad") pop = ad;
+      else if (p == "ld") pop = ld;
+      else if (p == "ud") pop = ud;
+      else if (p == "h") pop = h;
+      else if (p == "H") pop = H;
+      else if (p == "hh") pop = hh;
+      else if (p == "p" || p == "g") pop = "";
+      else pop = p;
     }
   }
   if (!len) len = 15;
-  if (!pop) password(rand_graph(len));
+  if (!pop.size()) password(rand_graph(len));
   else password(rand_pop(pop, len));
 }
 

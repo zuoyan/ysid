@@ -5,7 +5,7 @@
  *
  *
  */
-#include <string>
+#include "string.hpp"
 #include "ysid_db.hpp"
 #include "item.hpp"
 #include "ffile.hpp"
@@ -16,7 +16,6 @@
 #include <iostream>
 
 using namespace ysid;
-using std::string;
 
 int main(int argc, char *argv[]) {
   string path;

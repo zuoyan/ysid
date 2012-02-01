@@ -17,16 +17,36 @@ typedef std::streamsize ssize_t;
 #include <sys/time.h>
 #endif
 #include <gettimeofday.h>
+#include "string.hpp"
+#include <algorithm>
 
 namespace ysid {
 
-typedef std::string string;
+static inline std::string to_std_string(const string &s) {
+  std::string ss;
+  ss.insert(ss.begin(), s.begin(), s.end());
+  return ss;
+}
 
-template <class F>
-static inline string to_string(const F &f) {
+static inline string to_string(const string &s) {
+  return s;
+}
+
+template <class T>
+inline string to_string(const T &v) {
   std::ostringstream oss;
-  oss << f;
-  return oss.str();
+  oss << v;
+  string s;
+  std::string ss = oss.str();
+  s.insert(s.begin(), ss.begin(), ss.end());
+  std::fill(ss.begin(), ss.end(), 0);
+  return s;
+}
+
+static inline string to_string(const std::string &ss) {
+  string s;
+  s.insert(s.begin(), ss.begin(), ss.end());
+  return s;
 }
 
 static inline bool to_bool(const string &s, bool dft=false) {
@@ -38,15 +58,12 @@ static inline bool to_bool(const string &s, bool dft=false) {
 
 static inline long long to_int(const string &s) {
   if (s.size() == 0) return 0;
-  long long l;
-  std::istringstream iss(s);
-  iss >> l;
-  return iss.fail() ? 0 : l;
+  return atoll(s.c_str());
 }
 
 static inline long long to_int(const char *c) {
   if (!c) return 0;
-  return to_int(string(c));
+  return atoll(c);
 }
 
 #ifdef HAVE_CLOCK_GETTIME

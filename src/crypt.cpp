@@ -58,7 +58,7 @@ class rsa_cipher : public cipher {
   void clear_public();
 
  private:
-  std::string get_error();
+  string get_error();
   void load_key_error(const string &role, const string &fn);
 
   RSA *m_pri_key, *m_pub_key;
@@ -89,7 +89,7 @@ void rsa_cipher::clear_public() {
 }
 
 
-std::string rsa_cipher::get_error() {
+string rsa_cipher::get_error() {
   unsigned long e = ERR_get_error();
   char buf[121];
   return ERR_error_string(e, buf);
@@ -108,7 +108,7 @@ string rsa_cipher::encrypt(const string &value) {
                                   (unsigned char*)&to[0],
                                   m_pub_key, RSA_PKCS1_OAEP_PADDING);
     if (elen < 0) {
-      throw std::runtime_error("encrypt error:" + get_error());
+      throw std::runtime_error(to_std_string("encrypt error, " + get_error()));
     } else {
       ret.append(&to[0], &to[0] + elen);
     }
@@ -129,7 +129,7 @@ string rsa_cipher::decrypt(const string &value) {
                                    m_pri_key, RSA_PKCS1_OAEP_PADDING);
     if (dlen < 0) {
       throw std::runtime_error(
-          "decrypt error " + get_error());
+          to_std_string("decrypt error " + get_error()));
     } else {
       ret.append(&to[0], &to[0] + dlen);
     }
@@ -141,7 +141,8 @@ void rsa_cipher::load_key_error(const string &role, const string &fn) {
   string sn = fn;
   if (sn.size() > 100) sn = sn.substr(0, 100) + "...";
   throw std::runtime_error(
-      "load " + role + " key from (" + sn + ") failed:" + get_error());
+      to_std_string(
+          "load " + role + " key from (" + sn + ") failed:" + get_error()));
 }
 
 void rsa_cipher::load_public(const string &pubkey) {

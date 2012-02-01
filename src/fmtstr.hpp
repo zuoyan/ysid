@@ -12,21 +12,22 @@
 #include <string>
 #include <iostream>
 #include <stdexcept>
+#include "string.hpp"
 
 namespace ysid {
 
 namespace {
 
 #ifdef WIN32
-std::string fmtstr(const std::string &fmt) {
+string fmtstr(const string &fmt) {
   return fmt;
 }
 
 template <class T0>
-std::string fmtstr_one(std::string &fmt, const T0 &t0) {
-  std::string ret;
+string fmtstr_one(string &fmt, const T0 &t0) {
+  string ret;
   size_t p = fmt.find('%');
-  if (p == std::string::npos || p + 1 >= fmt.size()) {
+  if (p == string::npos || p + 1 >= fmt.size()) {
     std::cerr << "fmtstr: '" << fmt << "', epxect '%'" << std::endl;
     abort();
   }
@@ -58,27 +59,27 @@ std::string fmtstr_one(std::string &fmt, const T0 &t0) {
     fmt = fmt.substr(p + 3);
     return ret + to_string(t0);
   }
-  throw std::runtime_error(std::string("fmtstr: '" + fmt + "', epxect 's'"));
+  throw std::runtime_error(string("fmtstr: '" + fmt + "', epxect 's'"));
 }
 
 template<class T0>
-std::string fmtstr(const std::string &fmt, const T0 &t0) {
-  std::string ret, ff = fmt;
+string fmtstr(const string &fmt, const T0 &t0) {
+  string ret, ff = fmt;
   ret = fmtstr_one(ff, t0);
   return ret + ff;
 }
 
 template<class T0, class T1>
-std::string fmtstr(const std::string &fmt, const T0 &t0, const T1 &t1) {
-  std::string ret, ff = fmt;
+string fmtstr(const string &fmt, const T0 &t0, const T1 &t1) {
+  string ret, ff = fmt;
   ret = fmtstr_one(ff, t0);
   ret += fmtstr_one(ff, t1);
   return ret + ff;
 }
 
 template<class T0, class T1, class T2>
-std::string fmtstr(const std::string &fmt, const T0 &t0, const T1 &t1, const T2 &t2) {
-  std::string ret, ff = fmt;
+string fmtstr(const string &fmt, const T0 &t0, const T1 &t1, const T2 &t2) {
+  string ret, ff = fmt;
   ret = fmtstr_one(ff, t0);
   ret += fmtstr_one(ff, t1);
   ret += fmtstr_one(ff, t2);
@@ -86,8 +87,8 @@ std::string fmtstr(const std::string &fmt, const T0 &t0, const T1 &t1, const T2 
 }
 
 template<class T0, class T1, class T2, class T3>
-std::string fmtstr(const std::string &fmt, const T0 &t0, const T1 &t1, const T2 &t2, const T3 &t3) {
-  std::string ret, ff = fmt;
+string fmtstr(const string &fmt, const T0 &t0, const T1 &t1, const T2 &t2, const T3 &t3) {
+  string ret, ff = fmt;
   ret = fmtstr_one(ff, t0);
   ret += fmtstr_one(ff, t1);
   ret += fmtstr_one(ff, t2);
@@ -96,9 +97,9 @@ std::string fmtstr(const std::string &fmt, const T0 &t0, const T1 &t1, const T2 
 }
 
 template<class T0, class T1, class T2, class T3, class T4>
-std::string fmtstr(const std::string &fmt, const T0 &t0, const T1 &t1, const T2 &t2, const T3 &t3,
+string fmtstr(const string &fmt, const T0 &t0, const T1 &t1, const T2 &t2, const T3 &t3,
                    const T4 &t4) {
-  std::string ret, ff = fmt;
+  string ret, ff = fmt;
   ret = fmtstr_one(ff, t0);
   ret += fmtstr_one(ff, t1);
   ret += fmtstr_one(ff, t2);
@@ -109,9 +110,9 @@ std::string fmtstr(const std::string &fmt, const T0 &t0, const T1 &t1, const T2 
 
 
 template<class T0, class T1, class T2, class T3, class T4, class T5>
-std::string fmtstr(const std::string &fmt, const T0 &t0, const T1 &t1, const T2 &t2, const T3 &t3,
+string fmtstr(const string &fmt, const T0 &t0, const T1 &t1, const T2 &t2, const T3 &t3,
                    const T4 &t4, const T5 &t5) {
-  std::string ret, ff = fmt;
+  string ret, ff = fmt;
   ret = fmtstr_one(ff, t0);
   ret += fmtstr_one(ff, t1);
   ret += fmtstr_one(ff, t2);
@@ -122,9 +123,9 @@ std::string fmtstr(const std::string &fmt, const T0 &t0, const T1 &t1, const T2 
 }
 
 template<class T0, class T1, class T2, class T3, class T4, class T5, class T6>
-std::string fmtstr(const std::string &fmt, const T0 &t0, const T1 &t1, const T2 &t2, const T3 &t3,
+string fmtstr(const string &fmt, const T0 &t0, const T1 &t1, const T2 &t2, const T3 &t3,
                    const T4 &t4, const T5 &t5, const T6 &t6) {
-  std::string ret, ff = fmt;
+  string ret, ff = fmt;
   ret = fmtstr_one(ff, t0);
   ret += fmtstr_one(ff, t1);
   ret += fmtstr_one(ff, t2);
@@ -135,59 +136,59 @@ std::string fmtstr(const std::string &fmt, const T0 &t0, const T1 &t1, const T2 
   return ret + ff;
 }
 
-decltype(std::cerr)& fmterrlnt(const std::string &fmt) {
+decltype(std::cerr)& fmterrlnt(const string &fmt) {
   return std::cerr << "[" << get_drtime() << "]" << fmt << std::endl;
 }
 
 template <class T0>
-decltype(std::cerr)& fmterrlnt(const std::string &fmt, const T0 &t0) {
+decltype(std::cerr)& fmterrlnt(const string &fmt, const T0 &t0) {
   return std::cerr << "[" << get_drtime() << "]" << fmtstr(fmt, t0) << std::endl;
 }
 
 template <class T0, class T1>
-decltype(std::cerr)& fmterrlnt(const std::string &fmt, const T0 &t0, const T1 &t1) {
+decltype(std::cerr)& fmterrlnt(const string &fmt, const T0 &t0, const T1 &t1) {
   return std::cerr << "[" << get_drtime() << "]" << fmtstr(fmt, t0, t1) << std::endl;
 }
 
 template <class T0, class T1, class T2>
-decltype(std::cerr)& fmterrlnt(const std::string &fmt, const T0 &t0, const T1 &t1, const T2 &t2) {
+decltype(std::cerr)& fmterrlnt(const string &fmt, const T0 &t0, const T1 &t1, const T2 &t2) {
   return std::cerr << "[" << get_drtime() << "]" << fmtstr(fmt, t0, t1, t2) << std::endl;
 }
 
 template <class T0, class T1, class T2, class T3>
-decltype(std::cerr)& fmterrlnt(const std::string &fmt, const T0 &t0, const T1 &t1, const T2 &t2, const T3 &t3) {
+decltype(std::cerr)& fmterrlnt(const string &fmt, const T0 &t0, const T1 &t1, const T2 &t2, const T3 &t3) {
   return std::cerr << "[" << get_drtime() << "]" << fmtstr(fmt, t0, t1, t2, t3) << std::endl;
 }
 
 template <class T0, class T1, class T2, class T3, class T4>
-decltype(std::cerr)& fmterrlnt(const std::string &fmt, const T0 &t0, const T1 &t1, const T2 &t2, const T3 &t3, const T4 &t4) {
+decltype(std::cerr)& fmterrlnt(const string &fmt, const T0 &t0, const T1 &t1, const T2 &t2, const T3 &t3, const T4 &t4) {
   return std::cerr << "[" << get_drtime() << "]" << fmtstr(fmt, t0, t1, t2, t3, t4) << std::endl;
 }
 
 template <class T0, class T1, class T2, class T3, class T4, class T5>
-decltype(std::cerr)& fmterrlnt(const std::string &fmt, const T0 &t0, const T1 &t1, const T2 &t2, const T3 &t3, const T4 &t4, const T5 &t5) {
+decltype(std::cerr)& fmterrlnt(const string &fmt, const T0 &t0, const T1 &t1, const T2 &t2, const T3 &t3, const T4 &t4, const T5 &t5) {
   return std::cerr << "[" << get_drtime() << "]" << fmtstr(fmt, t0, t1, t2, t3, t4, t5) << std::endl;
 }
 
 template <class T0, class T1, class T2, class T3, class T4, class T5, class T6>
-decltype(std::cerr)& fmterrlnt(const std::string &fmt, const T0 &t0, const T1 &t1, const T2 &t2, const T3 &t3,
+decltype(std::cerr)& fmterrlnt(const string &fmt, const T0 &t0, const T1 &t1, const T2 &t2, const T3 &t3,
                                const T4 &t4, const T5 &t5, const T6 &t6) {
   return std::cerr << "[" << get_drtime() << "]" << fmtstr(fmt, t0, t1, t2, t3, t4, t5, t6) << std::endl;
 }
 
 #else
 
-static inline std::string fmtstr(const std::string &fmt) {
+static inline string fmtstr(const string &fmt) {
   return fmt;
 }
 
 template <class ...A>
-decltype(std::cerr)& fmterrlnt(const std::string &fmt, A...a);
+decltype(std::cerr)& fmterrlnt(const string &fmt, A...a);
 
 template<class H, class ...A>
-std::string fmtstr(const std::string &fmt, const H &h, const A&...a) {
+string fmtstr(const string &fmt, const H &h, const A&...a) {
   size_t p = fmt.find('%');
-  if (p == std::string::npos || p + 1 >= fmt.size()) {
+  if (p == string::npos || p + 1 >= fmt.size()) {
     std::cerr << "fmtstr: '" << fmt << "', epxect '%'" << std::endl;
     abort();
   }
@@ -216,31 +217,31 @@ std::string fmtstr(const std::string &fmt, const H &h, const A&...a) {
     return fmt.substr(0, p) + to_string(h)
         + fmtstr(fmt.substr(p + 3), a...);
   }
-  throw std::runtime_error(std::string("fmtstr: '" + fmt + "', epxect 's'"));
+  throw std::runtime_error(to_std_string("fmtstr: '" + fmt + "', epxect 's'"));
 }
 
 template <class ...A>
-decltype(std::cout)& fmtout(const std::string &fmt, A...a) {
+decltype(std::cout)& fmtout(const string &fmt, A...a) {
   return std::cout << fmtstr(fmt, a...);
 }
 
 template <class ...A>
-decltype(std::cerr)& fmterr(const std::string &fmt, A...a) {
+decltype(std::cerr)& fmterr(const string &fmt, A...a) {
   return std::cerr << fmtstr(fmt, a...);
 }
 
 template <class ...A>
-decltype(std::cout)& fmtoutln(const std::string &fmt, A...a) {
+decltype(std::cout)& fmtoutln(const string &fmt, A...a) {
   return fmtout(fmt, a...) << std::endl;
 }
 
 template <class ...A>
-decltype(std::cerr)& fmterrln(const std::string &fmt, A...a) {
+decltype(std::cerr)& fmterrln(const string &fmt, A...a) {
   return fmterr(fmt, a...) << std::endl;
 }
 
 template <class ...A>
-decltype(std::cerr)& fmterrlnt(const std::string &fmt, A...a) {
+decltype(std::cerr)& fmterrlnt(const string &fmt, A...a) {
   return fmterrln("[time %s]" + fmt, get_drtime(), a...);
 }
 

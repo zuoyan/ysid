@@ -6,6 +6,7 @@
  *
  */
 #include "ysid_db_model.hpp"
+#include "ysid_qt.hpp"
 #include <algorithm>
 
 struct scope_session {
@@ -158,15 +159,15 @@ ysid::string YsidDbModel::get_password(ysid::string uuid) const {
 bool YsidDbModel::login(const QString &path, const QString &dpri, const QString &dpub, const QString &password,
                         const QString &spri, const QString &spub, const QString &truncate, const QString &merge) {
   try {
-    if (truncate.size()) m_db->set_truncate_log(ysid::to_int(truncate.toStdString()));
+    if (truncate.size()) m_db->set_truncate_log(truncate.toLong());
     else m_db->set_truncate_log(0);
-    m_db->set_path(path.toStdString());
-    m_db->set_dpri_key(dpri.toStdString());
-    m_db->set_dpub_key(dpub.toStdString());
-    m_db->set_password(password.toStdString());
-    m_db->set_spri_key(spri.toStdString());
-    m_db->set_spub_key(spub.toStdString());
-    if (ysid::to_bool(merge.toStdString())) m_db->db()->merge();
+    m_db->set_path(qstring_to_local8bit(path));
+    m_db->set_dpri_key(qstring_to_local8bit(dpri));
+    m_db->set_dpub_key(qstring_to_local8bit(dpub));
+    m_db->set_password(qstring_to_local8bit(password));
+    m_db->set_spri_key(qstring_to_local8bit(spri));
+    m_db->set_spub_key(qstring_to_local8bit(spub));
+    if (ysid::to_bool(qstring_to_local8bit(merge))) m_db->db()->merge();
     sync_items();
     return true;
   } catch (std::exception &e) {

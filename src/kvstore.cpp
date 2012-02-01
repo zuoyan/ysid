@@ -183,8 +183,8 @@ struct file_kvstore : public kvstore {
 
   file_kvstore() {}
 
-  file_kvstore(const std::string &path) {
-    std::string hint_fn = path + ".hint";
+  file_kvstore(const string &path) {
+    string hint_fn = path + ".hint";
     size_t c = 0;
     if (file_newer_than(hint_fn.c_str(), path.c_str())) {
       c = read_hint(hint_fn);
@@ -213,10 +213,10 @@ struct file_kvstore : public kvstore {
     return ios();
   }
 
-  std::iostream& ios(const std::string &path) {
+  std::iostream& ios(const string &path) {
     m_ios = std::shared_ptr<std::iostream>(
         new std::fstream(
-            path,
+            path.c_str(),
             std::ios_base::binary | std::ios_base::app | std::ios_base::in | std::ios_base::out));
     return ios();
   }
@@ -281,9 +281,9 @@ struct file_kvstore : public kvstore {
     return merge(m_path);
   }
 
-  int merge(const std::string &path) {
+  int merge(const string &path) {
     if (!m_ios.get()) return -1;
-    std::string tmp = path + ".tmp." + to_string(time(0));
+    string tmp = path + ".tmp." + to_string(time(0));
     merge_write(tmp);
     m_ios.reset();
     unlink(path.c_str());
@@ -393,8 +393,8 @@ struct file_kvstore : public kvstore {
     is.clear();
   }
 
-  int merge_write(const std::string &path) {
-    std::ofstream ofs(path, std::ios_base::trunc | std::ios_base::binary);
+  int merge_write(const string &path) {
+    std::ofstream ofs(path.c_str(), std::ios_base::trunc | std::ios_base::binary);
     return merge_write(ofs);
   }
 
@@ -455,13 +455,13 @@ struct file_kvstore : public kvstore {
     }
   }
 
-  inline void write_hint(const std::string &fn) {
-    std::ofstream fs(fn, std::ios_base::trunc | std::ios_base::binary);
+  inline void write_hint(const string &fn) {
+    std::ofstream fs(fn.c_str(), std::ios_base::trunc | std::ios_base::binary);
     write_hint(fs);
   }
 
-  inline size_t read_hint(const std::string &fn) {
-    std::ifstream fs(fn, std::ios_base::binary);
+  inline size_t read_hint(const string &fn) {
+    std::ifstream fs(fn.c_str(), std::ios_base::binary);
     return read_hint(fs);
   }
 
@@ -483,11 +483,11 @@ struct file_kvstore : public kvstore {
   }
 
   inline size_t read_data(
-      const std::string &fn,
+      const string &fn,
       bool dest=false) {
     std::shared_ptr<std::iostream >
         pfs(new std::fstream(
-                fn,
+                fn.c_str(),
                 std::ios_base::binary | std::ios_base::app | std::ios_base::in | std::ios_base::out));
     size_t c = read_data(*pfs);
     if (dest) ios(pfs);
@@ -526,7 +526,7 @@ struct file_kvstore : public kvstore {
 };
 
 
-kvstore* new_file_kvstore(const std::string &path) {
+kvstore* new_file_kvstore(const string &path) {
   return new file_kvstore(path);
 }
 
